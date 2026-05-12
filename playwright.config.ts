@@ -18,6 +18,10 @@ const DAPP_PORT = 4269;
 
 export default defineConfig({
   testDir: './e2e',
+  // Use .e2e.ts not .spec.ts so bare `bun test` (which auto-discovers
+  // *.spec.ts everywhere) doesn't try to execute Playwright fixtures
+  // and report 25 spurious failures. Unit tests live in tests/*.test.ts.
+  testMatch: /.*\.e2e\.ts$/,
   // Runs once before the suite: onboards the wallet in a throwaway
   // profile and snapshots chrome.storage.local. Each test's popup
   // fixture loads the snapshot into a fresh profile, so individual
