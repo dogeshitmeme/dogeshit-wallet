@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Build artifacts (regenerated from src/)
+dist/
+build/
+*.zip
+
+# Bun HMR cache
+.bun/
+
+# Caches
+.cache/
+*.tsbuildinfo
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local env
+.env
+.env.local
+.env.*.local
+
+# Playwright e2e artifacts
+test-results/
+playwright-report/
+playwright/.cache/
+.e2e-fixtures/

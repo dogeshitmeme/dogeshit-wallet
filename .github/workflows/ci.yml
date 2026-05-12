@@ -1,0 +1,73 @@
+name: CI
+
+# Runs on every push to main and every PR targeting main.
+# A new push to the same branch cancels the in-progress run for that branch
+# (saves CI minutes during rapid pushes).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Audit, type check, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          # Pin to known-good version. Bump deliberately via PR — never let
+          # CI silently follow Bun's `latest` tag, or a Bun release with a
+          # regression breaks every PR with no code change.
+          bun-version: 1.3.13
+
+      - name: Install dependencies (frozen lockfile)
+        run: bun install --frozen-lockfile
+
+      - name: Audit dependencies (moderate+ CVEs only)
+        # solc bundles an old `tmp` with a known low-sev symlink-write
+        # advisory; it's dev-only (we use solc to compile ERC-20 / 721 /
+        # 1155 fixture contracts in tests) and has no runtime exposure.
+        # Filter to moderate+ so CI catches real risks without paging
+        # on a build-time dev-dep nit.
+        run: bun audit --audit-level=moderate
+
+      - name: Type check
+        run: bunx tsc --noEmit
+
+      - name: Run unit tests
+        run: bun test tests/
+
+      - name: Build extension bundle
+        # Confirms the bundler succeeds end-to-end (manifest references
+        # resolve, all entry points produce dist/ output). Catches build-
+        # only regressions that type-check + unit tests can miss.
+        run: bun run build
+
+      - name: Verify English-only (no CJK characters)
+        # This repo targets international developers; CJK characters in
+        # source, docs, env templates, or configs are rejected here so
+        # PRs land with consistent language.
+        run: |
+          if grep -rPn '[\x{4e00}-\x{9fff}]' \
+            --include='*.ts' --include='*.tsx' --include='*.md' \
+            --include='*.json' --include='*.yml' --include='*.html' \
+            --exclude-dir=node_modules --exclude-dir=.git \
+            --exclude-dir=dist --exclude-dir=test-results \
+            --exclude-dir=.e2e-fixtures \
+            .; then
+            echo "::error::CJK characters detected — wallet repo is English-only"
+            exit 1
+          fi
+          echo "✓ Repo is CJK-clean"

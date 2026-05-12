@@ -1,0 +1,3174 @@
+/* =========================================================================
+   DogeKit (extension popup subset). Shared design tokens + component
+   classes for the 360 px popup body. Sizes/paddings are tightened for
+   the popup viewport but the typographic identity (case, weight, family)
+   stays canonical — Anton for display headings, Comic Neue for meme
+   captions, Inter for body, JetBrains Mono for addresses/hashes.
+
+   Component classes (`.dk-btn` / `.dk-card` / `.dk-input` / `.dk-label`
+   / `.dk-mono` / `.dk-card-title` / `.dk-alert*` / etc) compose from
+   the brand tokens declared below.
+   ========================================================================= */
+
+:root {
+  --doge-yellow:  #FFD93D;
+  /* Was #FF4D4D — failed WCAG AA on white text overlays (~2.7:1).
+     Darkened to #C62828 (Material red 800) which gives 5.68:1
+     against white — passes AA for small text. Still unambiguously
+     "danger / alarm" red, just less candy-bright. */
+  --alarm-red:    #C62828;
+  --chunky-green: #6BCB77;
+  --cream:        #FFF8E1;
+  --white:        #FFFFFF;
+  --ink:          #000000;
+
+  --bg:           var(--cream);
+  --fg:           var(--ink);
+  --border-width: 3px;
+  --border-rule:  var(--border-width) solid var(--ink);
+
+  --shadow:       4px 4px 0 var(--ink);
+  --shadow-sm:    2px 2px 0 var(--ink);
+
+  --font-display: 'Anton', Impact, 'Arial Narrow Bold', sans-serif;
+  --font-meme:    'Comic Neue', 'Comic Sans MS', cursive;
+  --font-body:    'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+
+/* Universal: hide every scrollbar in the popup so nothing breaks the
+   neobrutalist look. wheel / trackpad / arrow-key scroll still works. */
+*           { scrollbar-width: none; }
+*::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  /* Cream paper with two offset radial dot grids — same texture as Much
+     Wallet's `.phone` interior. No outer frame; popup IS the phone. */
+  background-color: var(--cream);
+  background-image:
+    radial-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px),
+    radial-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 1px);
+  background-size: 22px 22px, 14px 14px;
+  background-position: 0 0, 8px 8px;
+  width: 360px;
+  height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+body::-webkit-scrollbar { display: none; }
+
+::selection { background: var(--doge-yellow); color: var(--ink); }
+
+#root {
+  /* 360 × 600 canvas. Tightened paddings/gaps so dense screens (connect
+     approval, sign confirm) fit without scroll. position:relative anchors
+     the floating conn-strip; flex-column lets footer controls margin-auto. */
+  position: relative;
+  min-height: 100%;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ───── Display + meme typography ─────────────────────────────────────── */
+
+
+.dk-meme-caption {
+  font-family: var(--font-meme);
+  font-weight: 700;
+}
+
+.dk-mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* ───── Header ─────────────────────────────────────────────────────────
+   Sticky-pinned to the popup's top edge. Negative left/right/top margins
+   extend the header to body edges (cancelling #root's padding) so when it
+   sticks the cream bg + ink border-bottom span the full width. */
+
+.dk-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--cream);
+  margin: -14px -14px 0;
+  padding: 10px 14px 4px;
+}
+/* Inner row that holds back-button / brand-icon / sticker / chain pill / ⚙
+   — all the original Header chrome. Kept as its own flex row so the optional
+   caption below sits on a clean second line inside the Header bounding box. */
+.dk-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+
+/* Header brand icon — Much Wallet's `.logo-tile`: 40×40 yellow square,
+   3px ink border, 2px shadow, **tilted −4°** for the doge-meme stamp feel. */
+.dk-brand-icon {
+  display: block;
+  border: var(--border-rule);
+  background: var(--doge-yellow);
+  box-shadow: var(--shadow-sm);
+  image-rendering: pixelated;
+  transform: rotate(-4deg);
+  flex-shrink: 0;
+}
+
+
+/* ───── Header chain picker (top-right network switcher) ─────────────────
+   Custom dropdown — native <select> is opted out because its menu uses OS
+   styling and breaks the neobrutalist design language. */
+
+.dk-chain-picker {
+  position: relative;
+  display: inline-block;
+}
+
+.dk-chain-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 12px;
+  padding: 4px 8px 4px 10px;
+  background: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  color: var(--ink);
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: transform 80ms, box-shadow 80ms;
+}
+
+.dk-chain-pill:hover  { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+.dk-chain-pill:active { transform: translate(2px, 2px); box-shadow: none; }
+
+.dk-chain-pill::after {
+  content: '▾';
+  font-size: 10px;
+  margin-left: 4px;
+  opacity: 0.6;
+}
+
+.dk-chain-pill.is-open::after {
+  content: '▴';
+}
+
+.dk-chain-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--chunky-green);
+  margin-right: 4px;
+  border: 1px solid var(--ink);
+}
+
+.dk-chain-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 200px;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow);
+  z-index: 100;
+  /* Hide the OS scrollbar — macOS overlay bars and Windows track bars both
+     break the neobrutalist look. Wheel/trackpad scroll still works. */
+  scrollbar-width: none;
+}
+.dk-chain-menu::-webkit-scrollbar { display: none; }
+
+.dk-chain-option {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--white);
+  border: 0;
+  border-bottom: 2px solid var(--ink);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 13px;
+  text-align: left;
+  color: var(--ink);
+}
+.dk-chain-option:last-child  { border-bottom: 0; }
+.dk-chain-option:hover       { background: var(--cream); }
+.dk-chain-option.is-current  { background: var(--doge-yellow); }
+.dk-chain-option.is-current::after { content: '✓'; margin-left: 6px; }
+
+.dk-chain-option-id {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.55;
+  margin-left: 10px;
+}
+
+/* ───── Account picker (dashboard inline dropdown) ───────────────────── */
+
+
+
+
+
+
+
+
+/* ───── Stickers (status pills) ──────────────────────────────────────── */
+
+.dk-sticker {
+  display: inline-block;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  background: var(--white);
+}
+.dk-sticker-red    { background: var(--alarm-red);    color: var(--white); transform: rotate(3deg);  }
+.dk-sticker-green  { background: var(--chunky-green); color: var(--ink);   transform: rotate(-2deg); }
+.dk-sticker-yellow { background: var(--doge-yellow);  color: var(--ink);   transform: rotate(2deg);  }
+
+/* ───── Cards ────────────────────────────────────────────────────────── */
+
+.dk-card {
+  background: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow);
+  padding: 14px;
+  /* Spacing comes from #root's flex `gap: 12px`. No card margin so two
+     adjacent cards stack cleanly without double spacing. */
+}
+
+/* ───── Unlock screen ────────────────────────────────────────────────────
+   "Much Wallet" lock-screen aesthetic — tilted black sticker holding the
+   lock emoji, big LOCKED display headline, password row with eye toggle,
+   yellow chunky CTA. No Header on this screen so the lock-card is the
+   first thing the user sees on a fresh popup open. */
+.dk-unlock {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 10px;
+  padding-top: 12px;
+}
+.dk-unlock-sticker {
+  width: 76px; height: 76px;
+  background: var(--ink);
+  border: var(--border-rule);
+  box-shadow: var(--shadow);
+  display: flex; align-items: center; justify-content: center;
+  transform: rotate(-4deg);
+  margin-bottom: 4px;
+  font-size: 38px; line-height: 1;
+}
+.dk-unlock-title {
+  margin: 6px 0 0;
+  font-family: var(--font-display); font-weight: 400;
+  font-size: 26px; line-height: 1;
+  letter-spacing: 0.01em;
+  /* White fill + ink stroke = the "doge meme outlined" treatment used by the
+     dashboard hero (`.dk-approve-display .big`). paint-order: stroke fill so
+     the stroke sits behind the fill instead of clipping each glyph. */
+  color: var(--white);
+  -webkit-text-stroke: 2px var(--ink);
+  paint-order: stroke fill;
+  text-transform: uppercase;
+  text-align: center;
+}
+.dk-unlock-sub {
+  margin: 0 0 6px;
+  font-family: var(--font-meme); font-weight: 700; font-size: 12px;
+  color: var(--ink); opacity: 0.7;
+  text-align: center;
+}
+.dk-unlock-input {
+  width: 100%;
+  display: flex; align-items: stretch;
+  background: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow);
+}
+.dk-unlock-input input {
+  flex: 1; min-width: 0;
+  padding: 14px 14px 14px 16px;
+  border: 0; outline: 0;
+  background: transparent;
+  font-family: var(--font-mono); font-weight: 700;
+  font-size: 18px; letter-spacing: 0.16em;
+  color: var(--ink);
+}
+.dk-unlock-input input::placeholder { letter-spacing: 0.04em; opacity: 0.4; }
+/* Hide browser-native password reveal controls (Edge / Chrome on Windows
+   render an extra eye button that doubles up with ours). Safari / Chrome
+   on macOS don't render one, so this is a no-op there. */
+.dk-unlock-input input::-ms-reveal,
+.dk-unlock-input input::-ms-clear { display: none; }
+.dk-unlock-input input::-webkit-credentials-auto-fill-button { display: none !important; }
+.dk-unlock-input .eye {
+  flex-shrink: 0;
+  width: 44px;
+  background: transparent;
+  border: 0;
+  font-size: 16px; line-height: 1;
+  cursor: pointer;
+  color: var(--ink);
+}
+.dk-unlock-input .eye:hover { background: var(--cream); }
+.dk-unlock-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--doge-yellow);
+  border: var(--border-rule);
+  box-shadow: var(--shadow);
+  font-family: var(--font-display); font-weight: 400;
+  font-size: 22px; letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.dk-unlock-btn:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 6px 6px 0 var(--ink);
+}
+.dk-unlock-btn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+.dk-unlock-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.dk-unlock-btn .doge { font-size: 16px; transform: rotate(-8deg); display: inline-block; }
+
+/* Card title — body 800, lowercase, hairline rule under. The
+   "heading of a block" typographic role: small, bold, set apart by
+   the rule and the case, not by a heavy font. */
+.dk-card-title {
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 14px;
+  text-transform: lowercase;
+  letter-spacing: -0.005em;
+  margin: 0 0 10px;
+  color: var(--ink);
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 6px;
+}
+
+/* ───── Key/value list ───────────────────────────────────────────────── */
+
+
+/* ───── Buttons ──────────────────────────────────────────────────────── */
+
+/* Buttons — same family/case/weight as frontend dk-btn, only the size is
+   tightened for the 360px popup. Visual language stays in lockstep. */
+.dk-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 14px;
+  text-transform: lowercase;
+  padding: 12px 18px;
+  border: var(--border-rule);
+  background: var(--doge-yellow);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  user-select: none;
+  border-radius: 0;
+  transition: transform 100ms, box-shadow 100ms;
+}
+.dk-btn:hover  { transform: translate(2px, 2px); box-shadow: var(--shadow-sm); }
+.dk-btn:active { transform: translate(4px, 4px); box-shadow: none; }
+.dk-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: var(--shadow);
+}
+
+.dk-btn-ghost  { background: var(--white); }
+.dk-btn-danger { background: var(--alarm-red); color: var(--white); }
+.dk-btn-block  { width: 100%; }
+.dk-btn-sm     { padding: 8px 12px; font-size: 12px; }
+
+.dk-btn-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ───── Inputs ───────────────────────────────────────────────────────── */
+
+/* Input — same mono 600 family/weight as frontend, only width:100% & smaller
+   font-size to fit the popup form layout. */
+.dk-input {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 12px;
+  border: var(--border-rule);
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+  outline: none;
+}
+.dk-input:focus {
+  outline: 3px solid var(--doge-yellow);
+  outline-offset: 2px;
+}
+.dk-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+/* ───── Inline alerts ────────────────────────────────────────────────── */
+
+/* Unified security-checks panel that lives between SignHead and
+   each mode's body. Replaces the per-body inline danger/warning
+   alerts so the whole list of risks shows up in one place. Spacing
+   matches the existing .dk-card siblings. */
+.dk-security-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 8px;
+}
+.dk-security-checks:empty {
+  display: none;
+}
+
+.dk-alert {
+  border: var(--border-rule);
+  padding: 10px 12px;
+  font-family: var(--font-meme);
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  background: var(--doge-yellow);
+  box-shadow: var(--shadow-sm);
+  /* Viem error messages can be 1–2 KB (full calldata + explainer).
+     Without word-break long hex pushes the box wider than the popup;
+     without max-height + overflow the box grows past the popup
+     viewport. Cap vertical at ~6 lines and scroll inside. */
+  word-break: break-word;
+  max-height: 14em;
+  overflow-y: auto;
+}
+.dk-alert-danger { background: var(--alarm-red); color: var(--white); }
+.dk-alert-info   { background: var(--white); }
+
+/* ───── Mnemonic word grid (4×3 for 12 words) ────────────────────────── */
+
+.dk-mnemonic {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  margin: 8px 0 14px;
+  user-select: text;
+}
+.dk-mnemonic-cell {
+  border: 2px solid var(--ink);
+  background: var(--cream);
+  padding: 6px 8px;
+}
+.dk-mnemonic-cell::before {
+  content: attr(data-i) ".";
+  font-size: 10px;
+  opacity: 0.55;
+  margin-right: 4px;
+}
+
+/* ───── Foot text ────────────────────────────────────────────────────── */
+
+
+/* =========================================================================
+   PORTFOLIO HERO  — sourced 1:1 from Much Wallet.html
+   Yellow card, slight CCW rotation, big stroked balance, doge-stamp at the
+   top-right, ink-on-yellow address pill bottom-left, % delta bottom-right.
+   ========================================================================= */
+
+.dk-hero {
+  background: var(--doge-yellow);
+  border: var(--border-rule);
+  box-shadow: var(--shadow);
+  padding: 14px 14px 12px;
+  margin: 4px 6px 14px 0;
+  position: relative;
+  transform: rotate(-0.6deg);
+  /* Bump above the action row + token list stacking contexts so the
+     $SHIT poop-drop animation can render OVER them as it falls from
+     the hero down into the "my tokens" area below. transform already
+     creates a stacking context here; z-index gives it explicit
+     priority over the document-flow siblings below. */
+  z-index: 5;
+  /* Pin to its own compositor layer so neighbouring reflow (tokens↔
+     NFTs tab switch swapping different-height bodies below) doesn't
+     re-rasterise the rotated Ð balance text. Without this, sub-pixel
+     rasterisation of `transform: rotate(-0.6deg)` shifts by ~1 px on
+     every paint triggered by surrounding layout changes, perceived
+     as jitter on the Ð36 number. `will-change: transform` is the
+     hint; the implicit GPU layer caches the rasterised bitmap. */
+  will-change: transform;
+}
+
+.dk-hero-eyebrow {
+  font-family: var(--font-meme);
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+/* Big stroked balance — Anton, white fill, 2px ink stroke (paint-order
+   stroke-fill so the stroke doesn't eat the glyph). Falls back to Impact
+   gracefully if Anton isn't loaded. */
+.dk-hero-bal {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  color: var(--white);
+  -webkit-text-stroke: 2px var(--ink);
+  paint-order: stroke fill;
+  font-size: 44px;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  margin: 4px 0 4px;
+  /* `overflow: visible` (rather than hidden + ellipsis) is required so
+     the $SHIT poop-drop animation can extend BELOW the hero into the
+     token-list area. DOGE-mode balance strings are short enough that
+     no truncation is needed in practice. */
+  white-space: nowrap;
+  overflow: visible;
+}
+.dk-hero-bal .unit  { font-size: 22px; margin-left: 2px; }
+
+/* 🐕 sits to the left of Ð in the DOGE-mode hero. The doge stays put
+   throughout — click triggers a poop-drop animation: the dog squats
+   briefly, a 💩 emerges from under it and falls down off the hero
+   into the token-list area (visual metaphor: dogeshit = doge produces
+   shit, both present).
+   Two visual states:
+     .is-interactive — mainnet, $SHIT not yet added: hover wiggles +
+       click triggers the doge-squat + poop-drop animation +
+       add-token RPC.
+     .is-static      — other chains: pure decoration, no cursor, no
+       hover effect, no click handler bound from React side. */
+.dk-doge-egg {
+  display: inline-block;
+  position: relative;
+  font-family: initial;
+  -webkit-text-stroke: 0;
+  color: initial;
+  user-select: none;
+  font-size: 0.85em; /* slightly smaller than the big number, ~37 px at hero scale */
+  margin-right: 4px;
+  vertical-align: -0.05em;
+}
+.dk-doge-egg.is-interactive {
+  cursor: pointer;
+}
+.dk-doge-egg-body {
+  display: inline-block;
+  transform-origin: 50% 90%;
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.dk-doge-egg.is-interactive:hover .dk-doge-egg-body {
+  transform: translateY(-2px) rotate(-6deg);
+}
+.dk-doge-egg.is-interactive:active .dk-doge-egg-body {
+  transform: scale(0.95);
+}
+/* Squat motion while pooping — brief vertical compression to "push".
+   Duration matches poopDrop so dog + poop finish together. */
+.dk-doge-egg.phase-pooping .dk-doge-egg-body {
+  animation: dogeSquat 1100ms cubic-bezier(0.45, 0, 0.55, 1);
+  pointer-events: none;
+}
+@keyframes dogeSquat {
+  0%   { transform: translateY(0) scaleY(1)    scaleX(1);   }
+  18%  { transform: translateY(2px) scaleY(0.82) scaleX(1.12); }
+  30%  { transform: translateY(0)   scaleY(1.05) scaleX(0.96); }
+  45%  { transform: translateY(0)   scaleY(1)    scaleX(1);   }
+  100% { transform: translateY(0); }
+}
+
+/* The "poop" itself — inline SVG <ShitPileGlyph> renders the brand
+   pile silhouette (matching the shape in public/icons/*.png) without
+   the yellow rounded-square chrome. SVG scales perfectly at any size,
+   transparent background means only the brown pile shows during the
+   fall over hero / action-row / token-list. Positioned absolutely so
+   it doesn't push hero text around. */
+.dk-doge-poop {
+  position: absolute;
+  left: 50%;
+  bottom: -0.1em;
+  width: 36px;
+  height: 36px;
+  pointer-events: none;
+  animation: poopDrop 1100ms cubic-bezier(0.45, 0, 0.55, 1) forwards;
+  will-change: transform, opacity;
+  /* Stack above the action row + token list during the fall. */
+  z-index: 10;
+}
+@keyframes poopDrop {
+  /* Pop into existence right under the dog, scale up to full size. */
+  0%   { transform: translate(-50%, -0.3em) scale(0.1);  opacity: 0; }
+  15%  { transform: translate(-50%, 0)      scale(0.9);  opacity: 1; }
+  25%  { transform: translate(-50%, 0.15em) scale(1);    opacity: 1; }
+  /* Plummet down off the hero, through the action row, and into the
+     token-list "my tokens" section before fading. ~380 px is enough
+     to visually reach the first token row in the default popup
+     height (popup is 600 px; hero ~110 px tall; action row ~50 px;
+     token list starts around 200 px down). */
+  100% { transform: translate(-50%, 380px)  scale(0.5)  rotate(45deg); opacity: 0; }
+}
+
+.dk-hero-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  gap: 8px;
+}
+
+.dk-hero-addr {
+  background: var(--ink);
+  color: var(--doge-yellow);
+  padding: 3px 8px;
+  border: 2px solid var(--ink);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+.dk-hero-addr.is-copied { background: var(--chunky-green); color: var(--ink); }
+
+/* Two-up action row above my-tokens (send / receive). Mirrors the demo's
+   `.quad` aesthetic: white tile + 3px ink border + 2px shadow + lowercase
+   body 800. Hover squashes the shadow + flips bg to doge-yellow for the
+   "stamp pressed" feel. */
+.dk-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 4px 0 4px;
+}
+.dk-actions button {
+  background: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  padding: 10px 4px;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 13px;
+  text-transform: lowercase;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  border-radius: 0;
+  color: var(--ink);
+  transition: transform 80ms, box-shadow 80ms, background 80ms;
+}
+.dk-actions button:hover {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+  background: var(--doge-yellow);
+}
+.dk-actions .ico { font-size: 18px; line-height: 1; }
+
+.dk-hero-stamp {
+  position: absolute;
+  top: -10px;
+  right: 8px;
+  background: var(--ink);
+  color: var(--doge-yellow);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-display);
+  font-size: 13px;
+  line-height: 1;
+  padding: 5px 8px 4px;
+  transform: rotate(6deg);
+  z-index: 2;
+  text-transform: uppercase;
+}
+
+/* =========================================================================
+   TOKENS LIST  — Much Wallet's `.tlist` and `.trow`
+   Each row: 36px icon · symbol+name · balance.  We omit the sparkline and
+   USD column because we don't have price data — keeps the row honest.
+   ========================================================================= */
+
+.dk-tokens-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 2px 8px;
+}
+
+/* Folding-screen tab strip. Both tabs are absolutely positioned;
+   their `left` values are computed in dashboard.tsx from the runtime-
+   measured tab widths (useLayoutEffect + offsetWidth), so the active
+   tab's right edge lands inside the inactive tab by exactly
+   TAB_OVERLAP_PX (32 px). That measurement is the source of truth —
+   no hard-coded font-width guesses here.
+     - Active sits at left:0, z-index 5, white bg, full opacity.
+     - Inactive sits at left = activeWidth − 32, z-index 1, yellow
+       bg, faded opacity, slightly scaled down for depth feel.
+   Switching activeTab animates both `left` values simultaneously
+   (one slides right, the other slides left) — neither tab leaves
+   the DOM, so transitions are smooth. Background + opacity also
+   crossfade during the slide. */
+.dk-assets-tabs {
+  position: relative;
+  /* Height pinned because absolute children can't size the parent. */
+  height: 30px;
+  margin-bottom: 4px;
+}
+.dk-assets-tab {
+  position: absolute;
+  top: 0;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  font-size: 18px;
+  line-height: 1;
+  padding: 6px 12px 5px;
+  border: 2px solid var(--ink);
+  background: var(--doge-yellow);
+  cursor: pointer;
+  color: var(--ink);
+  opacity: 0.6;
+  white-space: nowrap;
+  transition:
+    left       300ms cubic-bezier(0.4, 0, 0.2, 1),
+    background 240ms ease,
+    opacity    240ms ease,
+    transform  300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dk-assets-tab:hover { opacity: 1; }
+
+.dk-assets-tabs[data-active="tokens"] .dk-assets-tab[data-tab="tokens"],
+.dk-assets-tabs[data-active="nfts"]   .dk-assets-tab[data-tab="nfts"] {
+  z-index: 5;
+  background: var(--white);
+  opacity: 1;
+  transform: scale(1);
+}
+.dk-assets-tabs[data-active="tokens"] .dk-assets-tab[data-tab="nfts"],
+.dk-assets-tabs[data-active="nfts"]   .dk-assets-tab[data-tab="tokens"] {
+  z-index: 1;
+  transform: scale(0.96);
+  transform-origin: right center;
+}
+.dk-tokens-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Inline "hide 0" pill — Much Wallet demo's `.tokens-meta .toggle`.
+   Tiny mono caps button, yellow when on. Sits next to the coin count. */
+.dk-tokens-toggle {
+  background: var(--white);
+  border: 2px solid var(--ink);
+  padding: 2px 6px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: lowercase;
+  border-radius: 0;
+  color: var(--ink);
+  transition: transform 80ms;
+}
+.dk-tokens-toggle:hover  { transform: translate(1px, 1px); }
+.dk-tokens-toggle.is-on  { background: var(--doge-yellow); }
+
+/* Floating connection strip — pinned to the popup viewport's bottom edge.
+   `position: fixed` against the popup window means token list growth (or
+   any other content) doesn't push the strip down: it stays put while the
+   list scrolls under it. Hard 4px shadow for the "lifted" look. */
+.dk-conn-strip {
+  position: fixed;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: var(--border-rule);
+  box-shadow: var(--shadow);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+.dk-conn-strip.is-on  { background: var(--chunky-green); }
+.dk-conn-strip.is-off { background: var(--white); opacity: 0.7; }
+.dk-conn-strip .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink);
+  flex-shrink: 0;
+  border: 1px solid var(--ink);
+}
+.dk-conn-strip.is-off .dot { background: var(--white); }
+.dk-conn-strip .host {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: lowercase;
+}
+.dk-conn-strip .disconnect {
+  background: var(--ink);
+  color: var(--doge-yellow);
+  border: 2px solid var(--ink);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  cursor: pointer;
+  text-transform: lowercase;
+}
+
+/* =========================================================================
+   CONNECT CONFIRM — eth_requestAccounts approval screen, modeled after the
+   shared design mockup (black header strip + yellow-headed cards + red
+   "no" permission with diagonal stripes + dashed warning + nope/connect).
+   ========================================================================= */
+
+/* Black header strip */
+.dk-connect-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  background: var(--ink);
+  color: var(--doge-yellow);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+}
+.dk-connect-head .ico {
+  width: 28px;
+  height: 28px;
+  background: var(--doge-yellow);
+  border: 2px solid var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+  color: var(--ink);
+  object-fit: contain;
+  /* Slight crispness boost for tiny favicons. */
+  image-rendering: -webkit-optimize-contrast;
+}
+.dk-connect-head .meta { flex: 1; min-width: 0; }
+.dk-connect-head .host {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--doge-yellow);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+}
+.dk-connect-head .sub {
+  font-family: var(--font-meme);
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--white);
+  opacity: 0.55;
+  margin-top: 2px;
+}
+.dk-connect-head .new {
+  background: var(--alarm-red);
+  color: var(--white);
+  border: 2px solid var(--ink);
+  font-family: var(--font-display);
+  font-size: 12px;
+  padding: 3px 7px 2px;
+  letter-spacing: 0.04em;
+  transform: rotate(8deg);
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+
+/* Site greeting line: "<host> says hi 👋" */
+.dk-host-greeting {
+  font-family: var(--font-meme);
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.dk-host-greeting code {
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  padding: 2px 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Account summary card — yellow icon, label + meta, black address pill */
+.dk-acct-summary {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  padding: 8px;
+}
+.dk-acct-summary .ic {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--ink);
+  display: block;
+  /* AccountGlyph SVG fills the box; keep DogeKit yellow as a fallback for
+     glyphs that happen to roll a transparent shape. */
+  background: var(--doge-yellow);
+}
+.dk-acct-summary .info { min-width: 0; }
+.dk-acct-summary .name {
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 14px;
+  line-height: 1.1;
+}
+.dk-acct-summary .meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+.dk-acct-summary .addr-pill {
+  background: var(--ink);
+  color: var(--doge-yellow);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border: 2px solid var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Permission rows — colored square ico + descriptive line */
+.dk-perm-ico {
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+  font-weight: 800;
+}
+.dk-perm-ico.ok  { background: var(--chunky-green); }
+.dk-perm-ico.bad { background: var(--alarm-red); color: var(--white); }
+
+/* Diagonal red stripes for the "won't" / "can't" row to telegraph "blocked". */
+.dk-set-row.is-blocked {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent 0 8px,
+      rgba(255, 77, 77, 0.12) 8px 9px
+    );
+}
+
+/* Dashed warning strip ("check the URL, fren") */
+.dk-warn-strip {
+  border: 3px dashed var(--ink);
+  padding: 6px 10px;
+  font-family: var(--font-meme);
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 1.3;
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  background: transparent;
+}
+.dk-warn-strip .ico { font-size: 13px; flex-shrink: 0; }
+
+/* =========================================================================
+   RECEIVE  — sourced 1:1 from Much Wallet `.receive-card`. Tilted card,
+   yellow "scan me" stamp top-right, cream QR frame with brand-icon overlay
+   in the center, ink-on-yellow address bar, copy/share share-row, then a
+   solid red warning strip.
+   ========================================================================= */
+
+.dk-receive-card {
+  background: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  text-align: center;
+  position: relative;
+  transform: rotate(-1deg);
+  margin: 6px 0 14px;
+}
+.dk-receive-stamp {
+  position: absolute;
+  top: -14px;
+  right: -12px;
+  background: var(--doge-yellow);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-display);
+  font-size: 14px;
+  padding: 4px 9px;
+  transform: rotate(8deg);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.dk-qr-frame {
+  background: var(--cream);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 6px;
+  box-sizing: border-box;
+}
+.dk-qr-frame svg { width: 100%; height: 100%; }
+.dk-qr-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  background: var(--doge-yellow);
+  border: var(--border-rule);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  box-sizing: border-box;
+}
+.dk-qr-overlay svg, .dk-qr-overlay img { width: 100%; height: 100%; }
+.dk-addr-card {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--ink);
+  color: var(--doge-yellow);
+  padding: 10px 12px;
+  word-break: break-all;
+  text-align: center;
+  border: 2px solid var(--ink);
+  margin-bottom: 10px;
+}
+.dk-share-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+.dk-share-row button {
+  background: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  padding: 10px;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 13px;
+  text-transform: lowercase;
+  cursor: pointer;
+  border-radius: 0;
+  transition: transform 80ms, box-shadow 80ms, background 80ms;
+}
+.dk-share-row button:hover  { transform: translate(2px, 2px); box-shadow: none; background: var(--doge-yellow); }
+.dk-share-row button.copied { background: var(--chunky-green); }
+
+.dk-warn {
+  margin-top: 4px;
+  padding: 10px 12px;
+  background: var(--alarm-red);
+  color: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-meme);
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1.3;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.dk-warn .ico { font-size: 18px; line-height: 1; flex-shrink: 0; }
+
+/* =========================================================================
+   SEND  — sourced from Much Wallet `.amt-stage` / `.field-card` / `.cta-primary`.
+   Big stroked Anton amount + USD secondary + cream token pill picker, then a
+   field card for recipient, then a wide red CTA at the bottom.
+   ========================================================================= */
+
+.dk-amt-stage {
+  background: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow);
+  padding: 22px 18px 18px;
+  text-align: center;
+}
+.dk-amt-input {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  color: var(--white);
+  -webkit-text-stroke: 2px var(--ink);
+  paint-order: stroke fill;
+  font-size: 56px;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  border: none;
+  background: transparent;
+  outline: none;
+  text-align: center;
+  width: 100%;
+  padding: 0;
+  -moz-appearance: textfield;
+}
+.dk-amt-input::-webkit-outer-spin-button,
+.dk-amt-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.dk-amt-secondary {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+/* Balance + MAX, sits on its OWN line directly above the token picker pill.
+   Block-level flex with justify-content: center forces a line break against
+   the inline-flex token pill that follows — otherwise both inline-flex
+   siblings sit side by side. */
+.dk-amt-balance {
+  margin-top: 14px;
+  margin-bottom: 4px;
+  display: flex; justify-content: center; align-items: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 11px;
+}
+.dk-amt-balance .val { font-weight: 700; color: var(--ink); }
+.dk-amt-max {
+  background: var(--white);
+  border: 2px solid var(--ink);
+  font-family: var(--font-display); font-size: 10px;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  cursor: pointer;
+  color: var(--ink);
+}
+.dk-amt-max:hover:not(:disabled) { background: var(--doge-yellow); }
+.dk-amt-max:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.dk-amt-token {
+  position: relative;
+  display: inline-flex;
+}
+.dk-amt-token-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--cream);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  padding: 6px 10px;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 14px;
+  margin-top: 12px;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+.dk-amt-token-trigger .car { font-family: var(--font-mono); font-size: 11px; opacity: 0.6; }
+.dk-amt-token-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 220px;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow);
+  z-index: 100;
+}
+.dk-amt-token-menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 9px 12px;
+  border: 0;
+  border-bottom: 2px solid var(--ink);
+  background: var(--white);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 13px;
+  text-align: left;
+  color: var(--ink);
+}
+.dk-amt-token-menu button:last-child { border-bottom: 0; }
+.dk-amt-token-menu button:hover      { background: var(--cream); }
+.dk-amt-token-menu button.is-current { background: var(--doge-yellow); }
+.dk-amt-token-menu .bal {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.6;
+  margin-left: 10px;
+}
+
+.dk-field-card {
+  background: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  padding: 10px 12px;
+}
+.dk-field-card > label {
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: block;
+  margin-bottom: 4px;
+}
+.dk-field-card input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  border: none;
+  background: transparent;
+  outline: none;
+  padding: 0;
+  color: var(--ink);
+}
+
+/* Gas card — sourced from Much Wallet `.gas-card`. White card + "GAS (MUCH
+   FAST?)" header with current network estimate, 3-up grid of tiers. */
+.dk-gas-card {
+  background: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  padding: 12px 14px;
+}
+.dk-gas-card .head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.dk-gas-card .head .lbl {
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.dk-gas-card .head .val {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+.dk-gas-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.dk-gas-option {
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  padding: 6px 4px;
+  cursor: pointer;
+  border-radius: 0;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 11px;
+  text-transform: lowercase;
+  text-align: center;
+  line-height: 1.2;
+  color: var(--ink);
+}
+.dk-gas-option.is-on { background: var(--doge-yellow); }
+.dk-gas-option .num {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  opacity: 0.7;
+  display: block;
+  margin-top: 2px;
+  font-weight: 700;
+}
+/* Gwei sub-line under each gas tier (and inline next to the head USD).
+   Slightly dimmer than the eta + uppercase to read as raw protocol data. */
+.dk-gas-option .num.gwei { font-size: 9px; opacity: 0.55; }
+.dk-gas-card .head .val .gwei {
+  font-family: var(--font-mono); font-weight: 600;
+  font-size: 10px; opacity: 0.55;
+  margin-left: 2px;
+}
+
+.dk-cta-primary {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--alarm-red);
+  color: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow);
+  padding: 14px;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  font-size: 22px;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  border-radius: 0;
+  transition: transform 100ms, box-shadow 100ms;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: auto;
+}
+.dk-cta-primary:hover  { transform: translate(2px, 2px); box-shadow: var(--shadow-sm); }
+.dk-cta-primary:active { transform: translate(4px, 4px); box-shadow: none; }
+.dk-cta-primary:disabled {
+  background: var(--white);
+  color: var(--ink);
+  cursor: not-allowed;
+  opacity: 0.7;
+  /* hatch fill so disabled state is unmistakable */
+  background-image: repeating-linear-gradient(45deg, transparent 0 8px, rgba(0,0,0,0.06) 8px 9px);
+}
+
+/* =========================================================================
+   REVIEW (Send confirm phase)  — sourced from Much Wallet review mock.
+   "going out" stamp + big stroked amount + cream recipient block +
+   network/fee/total breakdown + warning strip + CTA.
+   ========================================================================= */
+
+.dk-review-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.dk-review-head .back {
+  background: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  width: 32px; height: 32px;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 0;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.dk-review-head .title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--ink);
+}
+.dk-review-head .sub {
+  display: block;
+  font-family: var(--font-meme);
+  font-weight: 700;
+  font-size: 11px;
+  opacity: 0.6;
+  margin-top: 2px;
+}
+
+.dk-going-stamp {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-3deg);
+  background: var(--alarm-red);
+  color: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  padding: 4px 10px 3px;
+  text-transform: uppercase;
+  z-index: 2;
+  white-space: nowrap;
+}
+
+.dk-amt-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding-top: 6px;
+}
+.dk-amt-display .num {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  color: var(--white);
+  -webkit-text-stroke: 2px var(--ink);
+  paint-order: stroke fill;
+  font-size: 52px;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+}
+.dk-amt-display .sym {
+  background: var(--doge-yellow);
+  border: 2px solid var(--ink);
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  padding: 3px 7px 2px;
+  text-transform: uppercase;
+}
+
+.dk-arrow-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--doge-yellow);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-display);
+  font-size: 16px;
+  margin: 6px auto;
+}
+
+.dk-recipient-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  padding: 10px;
+}
+.dk-recipient-row .info { min-width: 0; flex: 1; }
+.dk-recipient-row .addr {
+  font-family: var(--font-mono); font-weight: 700;
+  font-size: 12px; color: var(--ink);
+  word-break: break-all; line-height: 1.3;
+}
+
+.dk-fee-card {
+  background: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+}
+.dk-fee-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 14px;
+}
+.dk-fee-row .k {
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.dk-fee-row .v { font-family: var(--font-mono); font-size: 13px; font-weight: 700; }
+.dk-fee-divider {
+  height: 0;
+  border-top: 2px dashed var(--ink);
+  margin: 0 14px;
+}
+.dk-fee-row.is-total .k { font-weight: 900; font-size: 12px; }
+.dk-fee-row.is-total .v {
+  background: var(--doge-yellow);
+  border: 2px solid var(--ink);
+  padding: 3px 8px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* =========================================================================
+   SIGN CONFIRM (5-mode: message / typed / approve / raw / 7702)
+   Each mode has a distinct stamp colour, body shape, and CTA lock.
+   ========================================================================= */
+
+/* Header strip — same shape as connect-head, with mode-specific stamp */
+.dk-sign-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  background: var(--ink);
+  color: var(--doge-yellow);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+}
+.dk-sign-head .ico {
+  width: 28px; height: 28px;
+  background: var(--doge-yellow);
+  border: 2px solid var(--ink);
+  flex-shrink: 0; object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
+}
+.dk-sign-head .meta { flex: 1; min-width: 0; }
+.dk-sign-head .host {
+  font-family: var(--font-mono); font-weight: 700; font-size: 12px;
+  color: var(--doge-yellow);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.1;
+}
+.dk-sign-head .sub {
+  display: block;
+  font-family: var(--font-display); font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--doge-yellow);
+  margin-top: 2px;
+}
+
+.dk-sign-stamp {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  padding: 4px 8px 3px;
+  border: 2px solid var(--ink);
+  box-shadow: var(--shadow-sm);
+  text-transform: uppercase;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.dk-sign-stamp.tone-low  { background: var(--chunky-green); color: var(--ink); }
+.dk-sign-stamp.tone-warn { background: var(--doge-yellow);  color: var(--ink); }
+.dk-sign-stamp.tone-bad  { background: var(--alarm-red);    color: var(--white); }
+
+/* Signer line — the first row inside every sign-confirm action card,
+   sitting just below the yellow `<h4>` strip and followed by a dashed
+   divider (.dk-row-dashed). Anchors "who's signing" to the action card it
+   applies to. Full 0x40 hex address; no truncation. */
+.dk-signer-line {
+  display: flex; align-items: baseline; gap: 8px;
+  flex-wrap: wrap;
+}
+.dk-signer-line .cap {
+  font-family: var(--font-display); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--ink); opacity: 0.55;
+  flex-shrink: 0;
+}
+.dk-signer-line .addr {
+  font-family: var(--font-mono); font-weight: 700; font-size: 12px;
+  color: var(--ink);
+  word-break: break-all; min-width: 0;
+}
+
+/* Action card header (yellow caps strip used across all modes) */
+.dk-action-card {
+  background: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  padding: 0;
+}
+.dk-action-card h4 {
+  margin: 0;
+  padding: 6px 12px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  border-bottom: var(--border-rule);
+  background: var(--doge-yellow);
+  color: var(--ink);
+  text-transform: uppercase;
+}
+.dk-action-card .body { padding: 8px 10px; display: flex; flex-direction: column; gap: 8px; }
+.dk-action-card .url-pill {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  padding: 5px 8px;
+  word-break: break-all;
+}
+.dk-action-card .kv-grid {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  row-gap: 8px;
+  column-gap: 10px;
+  align-items: baseline;
+  font-size: 12px;
+}
+.dk-action-card .kv-grid dt {
+  font-family: var(--font-body); font-weight: 800;
+  text-transform: lowercase; color: var(--ink);
+}
+.dk-action-card .kv-grid dd {
+  margin: 0;
+  font-family: var(--font-body); font-weight: 800; font-size: 13px;
+}
+.dk-action-card .kv-grid dd.mono {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+  word-break: break-all;
+}
+.dk-action-card .row-sep {
+  grid-column: 1 / -1;
+  border-top: 2px dashed var(--ink);
+  margin: 0;
+  height: 0;
+}
+
+/* "no funds will move" tip (mode A) */
+.dk-tip-strip {
+  border: 3px dashed var(--ink);
+  background: transparent;
+  padding: 8px 10px;
+  font-family: var(--font-meme); font-weight: 700; font-size: 12px;
+  display: flex; gap: 6px; align-items: flex-start;
+  line-height: 1.3;
+}
+.dk-tip-strip .ico { font-size: 14px; flex-shrink: 0; }
+
+/* Big banner (modes D / E — top-of-screen red explainer) */
+.dk-big-banner {
+  background: var(--alarm-red);
+  color: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  padding: 10px 12px;
+  font-family: var(--font-meme); font-weight: 700; font-size: 12px;
+  line-height: 1.3;
+}
+.dk-big-banner h5 {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.dk-tldr {
+  background: var(--ink); color: var(--doge-yellow);
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  padding: 6px 8px; margin-top: 8px;
+  border: 2px solid var(--ink);
+}
+
+/* TYPED DATA structured message table (mode B) */
+.dk-typed-msg {
+  border: 2px solid var(--ink);
+  background: var(--cream);
+}
+.dk-typed-msg .head {
+  background: var(--doge-yellow);
+  border-bottom: 2px solid var(--ink);
+  padding: 4px 8px;
+  font-family: var(--font-display); font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* (Extra-fields styling removed — schema is now rejected upstream.) */
+
+/* ───── Typed-data semantic redesign ─────────────────────────────────────
+   New typed-data sign layout: dapp URL pill, then 5 semantic rows
+   (who/to/what/much/when), domain footer pill, collapsible raw-data
+   accordion. Replaces the old "domain block + flat key list" view.        */
+
+/* (URL pill removed — SignHead already shows the origin at the top of
+   every sign-confirm screen, so a second URL pill inside the action card
+   body would be visual repetition.) */
+
+/* Semantic row — narrow gray lowercase label on the left, content stack
+   on the right. Used for who / to / what / much / when. */
+.dk-semrow {
+  display: grid;
+  grid-template-columns: 60px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 8px 0;
+}
+.dk-semrow .k {
+  font-family: var(--font-body); font-weight: 700;
+  font-size: 11px; opacity: 0.6;
+  text-transform: lowercase;
+  padding-top: 4px;
+}
+.dk-semrow .v {
+  display: flex; flex-direction: column; gap: 4px;
+  min-width: 0;
+}
+.dk-semrow .v .dash {
+  color: var(--ink); opacity: 0.3; font-size: 18px;
+}
+/* Lead — flex-wrap row holding the bold name, verified badge, and inline
+   contract address + copy button. Each piece keeps its own visual weight
+   (name = 16px bold, addr = 11px mono dim) so hierarchy reads even when
+   they sit on the same line. */
+.dk-semrow .v .lead {
+  display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap;
+  word-break: break-word;
+}
+.dk-semrow .v .lead .name {
+  font-family: var(--font-body); font-weight: 800;
+  font-size: 16px; color: var(--ink);
+}
+.dk-semrow .v .lead .addr {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+  opacity: 0.65;
+  word-break: break-all;
+}
+
+/* Yellow chunky amount block (much row) — neobrutalist filled pill. */
+.dk-much-pill {
+  display: inline-block;
+  background: var(--doge-yellow);
+  border: 3px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  padding: 4px 10px;
+  font-family: var(--font-display); font-weight: 400;
+  font-size: 17px; letter-spacing: 0.04em;
+  color: var(--ink);
+}
+
+/* Dashed separator between when-row and domain pill. */
+.dk-row-dashed {
+  border-top: 2px dashed var(--ink);
+  opacity: 0.4;
+  margin: 4px 0 6px;
+}
+
+/* Domain footer pill — neutral cream pill carrying domain.name + chainId.
+   No ✓/? prefix or color-coded verification (that's a future-version
+   feature once we maintain a real registry of dapp/protocol identities). */
+.dk-domain-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  align-self: flex-start;
+  padding: 4px 10px;
+  border: 2px solid var(--ink);
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-body); font-weight: 700;
+  font-size: 12px;
+}
+.dk-domain-pill .chain { opacity: 0.6; font-weight: 600; }
+
+/* Raw data accordion — collapsed by default; opens to a black/yellow
+   monospace JSON pane (max height + scroll for huge messages). */
+.dk-rawdata {
+  border: 2px solid var(--ink);
+  background: var(--white);
+}
+.dk-rawdata > summary {
+  list-style: none;
+  padding: 8px 10px;
+  display: flex; align-items: center; gap: 6px;
+  cursor: pointer;
+  font-family: var(--font-body); font-weight: 700; font-size: 12px;
+}
+.dk-rawdata > summary::-webkit-details-marker { display: none; }
+.dk-rawdata > summary .caret {
+  font-size: 10px;
+  display: inline-block;
+  transition: transform 150ms;
+}
+.dk-rawdata[open] > summary .caret { transform: rotate(90deg); }
+.dk-rawdata > summary .lbl  { flex: 1; }
+.dk-rawdata > summary .meta {
+  font-family: var(--font-mono); font-weight: 600; font-size: 11px;
+  opacity: 0.5;
+}
+.dk-rawdata pre {
+  margin: 0;
+  padding: 10px;
+  background: var(--ink);
+  color: var(--doge-yellow);
+  font-family: var(--font-mono); font-size: 11px;
+  white-space: pre-wrap; word-break: break-all;
+  max-height: 220px;
+  overflow-y: auto;
+  border-top: 2px solid var(--ink);
+}
+
+/* APPROVE mode (mode C) */
+.dk-approve-display {
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  padding: 14px 12px;
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.dk-approve-display .cap {
+  font-family: var(--font-meme); font-weight: 700; font-size: 12px; opacity: 0.7;
+}
+.dk-approve-display .big {
+  display: flex; align-items: center; justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-family: var(--font-display);
+  color: var(--white);
+  -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill;
+  font-size: 56px; line-height: 0.95;
+  max-width: 100%; min-width: 0;
+}
+.dk-approve-display .big .sym {
+  background: var(--doge-yellow);
+  border: 2px solid var(--ink);
+  padding: 3px 7px 2px;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  -webkit-text-stroke: 0;
+  color: var(--ink);
+  text-transform: uppercase;
+}
+.dk-approve-toggle {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 100%;
+}
+.dk-approve-toggle button {
+  background: var(--white);
+  border: 2px solid var(--ink);
+  padding: 8px;
+  font-family: var(--font-body); font-weight: 800; font-size: 13px;
+  text-transform: lowercase;
+  cursor: pointer;
+  border-radius: 0;
+  color: var(--ink);
+}
+.dk-approve-toggle button.is-on { background: var(--doge-yellow); }
+.dk-approve-toggle button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Editable cap input — appears below the toggle when 'capped' is active.
+   Same neobrutalist treatment as dk-input elsewhere; symbol pill on the
+   right echoes the dapp's request. */
+.dk-approve-input {
+  margin-top: 8px;
+  display: flex; align-items: stretch;
+  border: 2px solid var(--ink);
+  background: var(--cream);
+}
+.dk-approve-input input {
+  flex: 1; min-width: 0;
+  padding: 8px 10px;
+  border: 0; outline: 0;
+  background: transparent;
+  font-family: var(--font-mono); font-weight: 700; font-size: 14px;
+  color: var(--ink);
+}
+.dk-approve-input input:disabled { opacity: 0.55; }
+.dk-approve-input .sym {
+  display: flex; align-items: center;
+  padding: 0 10px;
+  background: var(--doge-yellow);
+  border-left: 2px solid var(--ink);
+  font-family: var(--font-display); font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* The wallet intentionally ships no "verified contract" tag classes.
+   Friendly-name badges depend on a maintained address registry — a
+   stale entry there is a free phishing assist. Sign-confirm displays
+   the raw 0x40 hex address everywhere and defers identification to
+   the user's preferred explorer. */
+
+.dk-chain-badge {
+  background: var(--doge-yellow);
+  border: 2px solid var(--ink);
+  font-family: var(--font-display); font-size: 10px;
+  padding: 2px 6px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  display: inline-block;
+  margin-left: 6px;
+}
+.dk-chain-badge.is-test { background: var(--chunky-green); }
+
+/* RAW BYTES mode (mode D) */
+.dk-raw-show-more {
+  margin-top: 6px;
+  display: inline-block;
+  background: var(--ink); color: var(--doge-yellow);
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  padding: 3px 8px;
+  border: 2px solid var(--ink);
+  cursor: pointer;
+}
+.dk-ack-row {
+  background: var(--alarm-red);
+  border: 2px solid var(--ink);
+  box-shadow: var(--shadow-sm);
+  color: var(--white);
+  padding: 8px 10px;
+  display: flex; gap: 8px; align-items: flex-start;
+  font-family: var(--font-meme); font-weight: 700; font-size: 12px;
+  line-height: 1.3;
+}
+.dk-ack-row input { margin-top: 2px; flex-shrink: 0; accent-color: var(--ink); }
+
+/* CTA variants */
+.dk-cta-locked {
+  background: var(--alarm-red); color: var(--white);
+  background-image: repeating-linear-gradient(45deg, transparent 0 6px, rgba(255,255,255,0.18) 6px 7px);
+}
+
+/* Slide-to-confirm (mode E) */
+.dk-slide-hint {
+  background: var(--doge-yellow);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  padding: 6px 10px;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.dk-slide-track {
+  position: relative;
+  height: 38px;
+  background: var(--ink);
+  color: var(--doge-yellow);
+  border: var(--border-rule);
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.dk-slide-track .label {
+  position: absolute; left: 0; right: 0; text-align: center;
+  pointer-events: none;
+}
+.dk-slide-thumb {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 52px;
+  background: var(--doge-yellow);
+  border-right: 2px solid var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-size: 16px;
+  color: var(--ink);
+  cursor: grab;
+  z-index: 1;
+  touch-action: none;
+}
+.dk-slide-thumb:active { cursor: grabbing; }
+.dk-slide-track.is-unlocked { background: var(--chunky-green); color: var(--ink); }
+.dk-slide-track.is-unlocked .dk-slide-thumb { cursor: default; }
+
+/* =========================================================================
+   TOAST  — sourced from Much Wallet's `.toast`. Yellow / green / red tones,
+   slight CCW tilt, hard-shadow, fixed bottom. Non-blocking, auto-dismisses
+   after ~2.2 s. Sits above the conn-strip (z-index 50) so it doesn't tuck
+   under it. Negative tilt + slide-in animation gives a "stamped" feel.
+   ========================================================================= */
+.dk-toast {
+  position: fixed;
+  /* Body is 360 px wide (see `body` rule). When the popup runs as the
+     real chrome extension popup, viewport === body so left:14/right:14
+     produces a 332-px-wide bar. When the popup is loaded as a regular
+     tab (dev inspection, e2e), `position: fixed` anchors to the wider
+     browser viewport instead — `max-width` + `left: 14px` keeps the
+     toast at popup-body width regardless of where it's rendered. */
+  left: 14px;
+  right: auto;
+  max-width: calc(360px - 28px);
+  width: calc(100vw - 28px);
+  bottom: 70px;
+  background: var(--doge-yellow);
+  border: var(--border-rule);
+  box-shadow: var(--shadow);
+  padding: 10px 14px;
+  font-family: var(--font-meme);
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.3;
+  display: flex;
+  /* `flex-start` so the leading icon stays pinned to the top of the
+     box instead of vertically centering against a multi-line text run.
+     Without it the icon would drift down as the text grows. */
+  align-items: flex-start;
+  gap: 8px;
+  transform: rotate(-1deg);
+  /* Above EVERY other stacking context in the popup — modal backdrop
+     (70), any future overlays. Toasts are user-feedback and must
+     always be visible when they fire. */
+  z-index: 999;
+  animation: dk-toast-in 180ms ease-out;
+  word-break: break-word;
+  /* Cap height so verbose errors (viem InsufficientFunds dumps the
+     full calldata + a multi-paragraph explainer) can't grow the toast
+     past the popup viewport. Content overflows from the bottom — the
+     useful first ~6 lines stay visible, the trailing dump clips. */
+  max-height: 30vh;
+  overflow: hidden;
+}
+.dk-toast.green { background: var(--chunky-green); }
+.dk-toast.red   { background: var(--alarm-red); color: var(--white); }
+.dk-toast .ico  { font-size: 18px; line-height: 1; flex-shrink: 0; }
+
+@keyframes dk-toast-in {
+  from { opacity: 0; transform: translateY(16px) rotate(-3deg); }
+  to   { opacity: 1; transform: translateY(0) rotate(-1deg); }
+}
+
+.dk-tlist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dk-trow {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  background: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  padding: 10px 12px;
+  cursor: default;
+  text-align: left;
+  border-radius: 0;
+  transition: transform 80ms, box-shadow 80ms;
+}
+.dk-trow.is-clickable { cursor: pointer; }
+.dk-trow.is-clickable:hover {
+  background: var(--doge-yellow);
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+/* Coloured token glyph squares — first letter of symbol over a brand color.
+   Real token logos would need network fetches we'd rather avoid for v1. */
+.dk-tic {
+  width: 36px;
+  height: 36px;
+  border: var(--border-rule);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 14px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+.dk-tic.usdc { background: #2775CA; color: var(--white); }
+.dk-tic.usdt { background: #26A17B; color: var(--white); }
+.dk-tic.dai  { background: var(--doge-yellow); color: var(--ink); }
+.dk-tic.weth { background: var(--ink);      color: var(--white); }
+.dk-tic.eth  { background: #627EEA;         color: var(--white); }
+.dk-tic.gen  { background: var(--cream); color: var(--ink); }
+
+.dk-trow .nm  { font-weight: 800; font-size: 15px; line-height: 1.1; }
+.dk-trow .sub { font-family: var(--font-mono); font-size: 10px; opacity: 0.7; margin-top: 2px; }
+.dk-trow .right { text-align: right; }
+.dk-trow .bal { font-family: var(--font-mono); font-size: 14px; font-weight: 700; line-height: 1.1; }
+
+/* Right-click context menu — replaces the old always-visible ✕ on each
+   removable token row. Anchored to the row's right edge, vertically
+   centered, overlaps the balance area with high z-index. Click outside
+   or press Escape to close (handled in dashboard.tsx). */
+.dk-trow {
+  position: relative;
+}
+.dk-trow-ctx {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  z-index: 30;
+  display: flex;
+  gap: 4px;
+}
+.dk-trow-ctx-btn {
+  background: var(--alarm-red, #e85d4f);
+  color: var(--white);
+  border: 2px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  padding: 6px 10px;
+  font-family: var(--font-meme);
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: transform 80ms;
+}
+.dk-trow-ctx-btn:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+.dk-trow-ctx-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+/* NFT card right-click context menu — mirrors `.dk-trow-ctx` but
+   anchored over the thumb instead of inline beside a row. Card has
+   `position: relative` for the absolute placement to land. */
+.dk-nft-card { position: relative; cursor: pointer; }
+/* ERC-1155 owned-count badge — small mono pill next to the tokenId
+   line on the grid card. Cream so it doesn't steal focus from the
+   name/tokenId; just a hint. */
+.dk-nft-count {
+  margin-left: 4px;
+  font-weight: 700;
+  color: var(--ink);
+  opacity: 0.85;
+}
+
+/* Pre-flight simulation status pill — sits just below the action
+   card in sign-confirm. Pending = neutral; pass = green confidence
+   builder; fail isn't rendered here (the detailed revert banner
+   inside each body covers it instead). */
+.dk-sim-pill {
+  margin-top: 8px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  border: var(--border-rule);
+  background: var(--cream);
+}
+.dk-sim-pill.is-pending { background: var(--doge-yellow); }
+.dk-sim-pill.is-pass    { background: var(--chunky-green); color: var(--white); }
+
+/* ───── Activity screen ─────────────────────────────────────────── */
+.dk-act-toolbar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.dk-act-toolbar .dk-btn {
+  font-size: 11px;
+  padding: 4px 8px;
+}
+.dk-act-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.dk-act-row {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px dashed rgba(0, 0, 0, 0.12);
+}
+.dk-act-row:first-child { border-top: 0; }
+.dk-act-status {
+  flex-shrink: 0;
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  border: var(--border-rule);
+  font-weight: 800;
+  font-size: 12px;
+  background: var(--white);
+}
+.dk-act-status.is-pending { background: var(--doge-yellow); }
+.dk-act-status.is-success { background: var(--chunky-green); color: var(--white); }
+.dk-act-status.is-failed  { background: var(--alarm-red); color: var(--white); }
+.dk-act-body { flex: 1; min-width: 0; }
+.dk-act-line1 {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+}
+.dk-act-line1 .time { font-size: 10px; opacity: 0.6; font-weight: 400; }
+.dk-act-line2, .dk-act-line3 { font-size: 11px; opacity: 0.75; margin-top: 2px; word-break: break-all; }
+.dk-act-line3 code { font-size: 10px; }
+.dk-act-explorer {
+  color: inherit;
+  text-decoration: none;
+  margin-left: 4px;
+}
+.dk-act-explorer:hover { opacity: 1; color: var(--ink); }
+
+/* ───── NFT detail modal ────────────────────────────────────────── */
+.dk-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 70;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 14px;
+  overflow-y: auto;
+  /* Pin to the popup body width so the modal doesn't span the wider
+     viewport when popup.html is loaded as a tab (dev inspection). */
+  max-width: 360px;
+  margin: 0 auto;
+}
+.dk-modal {
+  position: relative;
+  width: 100%;
+  max-width: calc(360px - 28px);
+  background: var(--cream);
+  border: var(--border-rule);
+  box-shadow: var(--shadow);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.dk-modal-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px; height: 28px;
+  padding: 0;
+  border: var(--border-rule);
+  background: var(--white);
+  font-weight: 800;
+  cursor: pointer;
+  z-index: 1;
+}
+.dk-modal-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: var(--border-rule);
+  background: var(--white);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dk-modal-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.dk-modal-thumb .placeholder { font-size: 64px; }
+/* Big square token glyph for the detail modal — reuses `.dk-tic`
+   color tinting (passed as a second class) but renders at modal-card
+   scale instead of the 36 px row-icon size. */
+.dk-modal-token-icon {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto;
+  border: var(--border-rule);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display, var(--font-meme));
+  font-weight: 800;
+  font-size: 56px;
+  background: var(--cream);
+  color: var(--ink);
+  user-select: none;
+}
+.dk-modal-thumb .standard {
+  position: absolute;
+  top: 6px; left: 6px;
+  background: var(--ink);
+  color: var(--cream);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 6px;
+  letter-spacing: 0.04em;
+}
+.dk-modal-title {
+  margin: 4px 0 0;
+  font-size: 16px;
+  font-weight: 800;
+  word-break: break-word;
+}
+.dk-modal-balance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--doge-yellow);
+  border: var(--border-rule);
+}
+.dk-modal-balance .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.7; }
+.dk-modal-balance .val { font-family: var(--font-mono); font-weight: 800; font-size: 15px; flex: 1; }
+.dk-modal-refresh {
+  width: 26px; height: 26px;
+  padding: 0;
+  border: var(--border-rule);
+  background: var(--white);
+  cursor: pointer;
+  font-weight: 800;
+}
+.dk-modal-refresh:disabled { opacity: 0.5; cursor: wait; }
+.dk-modal-kv {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 4px 8px;
+  margin: 0;
+  font-size: 12px;
+}
+.dk-modal-kv dt {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  opacity: 0.6;
+  font-size: 11px;
+  align-self: center;
+}
+.dk-modal-kv dd {
+  margin: 0;
+  min-width: 0;
+}
+.dk-modal-kv code {
+  display: inline-block;
+  word-break: break-all;
+  font-size: 11px;
+  cursor: copy;
+  user-select: all;
+}
+/* Address row: bare inline `0xXXXX…XXXX ⧉` — no border, no padding,
+   no button chrome. The whole span is clickable; ⧉ is just a visual
+   affordance for "copy" so the user knows the click does something. */
+.dk-modal-addr {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  user-select: none;
+}
+.dk-modal-addr:hover .dk-modal-copy-icon { opacity: 1; }
+.dk-modal-addr code {
+  /* Reset .dk-modal-kv code's `user-select: all` so the address
+     stays one click-to-copy unit instead of "select on click". */
+  font-size: 11px;
+  cursor: inherit;
+  user-select: none;
+  word-break: keep-all;
+}
+.dk-modal-copy-icon {
+  font-size: 12px;
+  opacity: 0.55;
+  transition: opacity 120ms ease-out;
+}
+.dk-nft-ctx {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 30;
+}
+.dk-nft-ctx-btn {
+  background: var(--alarm-red, #e85d4f);
+  color: var(--white);
+  border: 2px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  padding: 6px 10px;
+  font-family: var(--font-meme);
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: transform 80ms;
+}
+.dk-nft-ctx-btn:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+.dk-nft-ctx-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+/* NFT grid — 2 columns at 360 px popup width, square thumbs with the
+   image filling the box. Brand neobrutalist treatment: 3 px ink border,
+   tilted hover, tiny corner pills for the standard tag + remove button.
+   Image fallback is a 🖼 emoji centered on a cream background. */
+.dk-nft-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 4px 0;
+}
+.dk-nft-card {
+  background: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.dk-nft-card .thumb {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: var(--cream);
+  border-bottom: 2px solid var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.dk-nft-card .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.dk-nft-card .thumb .placeholder {
+  font-size: 32px;
+  opacity: 0.4;
+}
+.dk-nft-card .thumb .standard {
+  position: absolute;
+  top: 4px; left: 4px;
+  background: var(--ink);
+  color: var(--white);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 5px;
+  letter-spacing: 0.04em;
+}
+.dk-nft-card .thumb .remove {
+  position: absolute;
+  top: 4px; right: 4px;
+  border: 2px solid var(--ink);
+  background: var(--white);
+  cursor: pointer;
+  padding: 1px 5px;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 700;
+}
+.dk-nft-card .thumb .remove:hover {
+  background: var(--alarm-red);
+  color: var(--white);
+}
+.dk-nft-card .meta {
+  padding: 6px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.dk-nft-card .meta .name {
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dk-nft-card .meta .sub {
+  font-size: 10px;
+  opacity: 0.65;
+}
+/* Inline "send ↗" CTA on each NFT card. Mono caps font matching the
+   "+ add token" / "hide 0" strip elsewhere, so the visual language
+   stays consistent. Sits below the name/sub stack. */
+.dk-nft-send {
+  margin-top: 4px;
+  padding: 3px 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+  cursor: pointer;
+  align-self: flex-start;
+}
+.dk-nft-send:hover { background: var(--doge-yellow); }
+.dk-nft-send:active { transform: translate(1px, 1px); }
+
+.dk-add-strip {
+  margin-top: 4px;
+  border: 3px dashed var(--ink);
+  background: transparent;
+  padding: 12px;
+  text-align: center;
+  font-family: var(--font-meme);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 0;
+  text-transform: lowercase;
+}
+.dk-add-strip:hover { background: var(--white); }
+
+/* Empty state shown when both builtin and user lists are empty (rare,
+   custom chains). */
+.dk-empty {
+  margin-top: 8px;
+  padding: 22px 18px 24px;
+  background: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+  position: relative;
+}
+.dk-empty .doge-stamp {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-3deg);
+  background: var(--alarm-red);
+  color: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-display);
+  font-size: 13px;
+  padding: 4px 10px;
+  text-transform: uppercase;
+}
+.dk-empty h3 {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  font-size: 26px;
+  line-height: 1;
+  margin: 6px 0 4px;
+}
+.dk-empty p {
+  font-family: var(--font-meme);
+  font-weight: 700;
+  font-size: 12px;
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* =========================================================================
+   SETTINGS CARD  — Much Wallet's `.settings-card`
+   Yellow header band + black-rule rows (icon · label · value · chevron)
+   ========================================================================= */
+
+.dk-set-card {
+  background: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 12px;
+  border-radius: 0;
+}
+.dk-set-card h4 {
+  margin: 0;
+  padding: 6px 12px;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  border-bottom: var(--border-rule);
+  background: var(--doge-yellow);
+  color: var(--ink);
+}
+.dk-set-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  border-bottom: 2px solid var(--ink);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 12px;
+  gap: 8px;
+}
+.dk-set-row:last-child { border-bottom: none; }
+.dk-set-row .ico { width: 22px; font-size: 15px; flex-shrink: 0; }
+.dk-set-row .label { flex: 1; padding-left: 4px; text-transform: lowercase; min-width: 0; }
+.dk-set-row .val {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.7;
+  margin-right: 4px;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+.dk-set-row .car { font-family: var(--font-mono); font-size: 12px; opacity: 0.5; }
+.dk-set-row.is-clickable { cursor: pointer; }
+.dk-set-row.is-clickable:hover { background: var(--cream); }
+.dk-set-row.is-danger .label { color: var(--alarm-red); }
+
+/* "Allow unverified 7702 delegate" override row — visually marked when
+   currently ON so the user can't miss that the protection is disabled. */
+.dk-set-row.is-danger.is-on {
+  background: var(--alarm-red);
+}
+.dk-set-row.is-danger.is-on .label,
+.dk-set-row.is-danger.is-on .val,
+.dk-set-row.is-danger.is-on .ico {
+  color: var(--white);
+}
+
+/* Two-stage confirmation strip — appears below the danger toggle when
+   the user first taps it OFF→ON. Forces a deliberate second click on
+   the red "yes, enable override" CTA. Closing this strip = cancel. */
+.dk-danger-confirm {
+  background: var(--cream);
+  border-top: 2px dashed var(--alarm-red);
+  padding: 12px 14px;
+}
+.dk-danger-confirm p {
+  margin: 0 0 10px 0;
+  font-family: var(--font-meme);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.dk-danger-confirm p b {
+  background: var(--alarm-red);
+  color: var(--white);
+  padding: 1px 4px;
+}
+
+/* Source-verification banner inside SevenSevenZeroTwoBody. Four tone
+   variants — pending (neutral), ok (green), block (red), override
+   (red-but-acknowledged). Centered, chunky, hard to miss. */
+.dk-verify {
+  padding: 8px 10px;
+  font-family: var(--font-meme);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  border: 2px solid var(--ink);
+  margin-bottom: 8px;
+}
+.dk-verify-pending {
+  background: var(--cream);
+}
+.dk-verify-block {
+  background: var(--alarm-red);
+  color: var(--white);
+}
+.dk-verify-override {
+  background: var(--ink);
+  color: var(--alarm-red);
+  border-color: var(--alarm-red);
+}
+
+/* Clickable address — used in the 7702 sign-confirm delegate row to
+   jump out to a block explorer. Inherits the dd's mono font; gets
+   an underline + a tiny ↗ arrow so it's clearly interactive. */
+.dk-addr-link {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.dk-addr-link:hover {
+  background: var(--doge-yellow);
+}
+.dk-addr-link-arrow {
+  display: inline-block;
+  margin-left: 2px;
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+/* DogeKit toggle (sourced from Much Wallet's `.toggle`). Squared track + ink
+   knob; flips to chunky-green track + yellow knob when on. */
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Welcome screen ("MUCH WALLET") — first-launch onboarding hero.
+   Mirrors the DogeKit neobrutalist sticker stack: oversized stroked title,
+   black-card option rows, dashed footer note. The recommended option (create)
+   is yellow + rotated red "recommended" stamp; hardware option is rendered
+   visible-but-soon to honor the design without lying about capability.
+   ─────────────────────────────────────────────────────────────────────── */
+.dk-welcome-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin: 6px 0 14px;
+  gap: 6px;
+}
+.dk-welcome-logo {
+  background: var(--doge-yellow);
+  border: var(--border-rule);
+  box-shadow: var(--shadow);
+  padding: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-3deg);
+  margin-bottom: 4px;
+}
+.dk-welcome-logo img { display: block; image-rendering: pixelated; }
+
+.dk-welcome-title {
+  font-family: var(--font-display);
+  font-size: 38px;
+  line-height: 0.95;
+  letter-spacing: 0.01em;
+  margin: 4px 0 2px;
+  color: var(--white);
+  -webkit-text-stroke: 2px var(--ink);
+  text-shadow: 3px 3px 0 var(--ink);
+}
+.dk-welcome-sub {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  opacity: 0.78;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.dk-welcome-option {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+  margin: 0 0 10px;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+  color: var(--ink);
+  transition: transform 80ms ease, box-shadow 80ms ease;
+}
+.dk-welcome-option:hover  { transform: translate(2px, 2px); box-shadow: var(--shadow-sm); }
+.dk-welcome-option:active { transform: translate(4px, 4px); box-shadow: none; }
+
+.dk-welcome-option.is-recommended { background: var(--doge-yellow); }
+.dk-welcome-option.is-soon         { opacity: 0.78; }
+
+.dk-welcome-icon {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  background: var(--ink);
+  color: var(--doge-yellow);
+  border: var(--border-rule);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+}
+.dk-welcome-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dk-welcome-name {
+  font-weight: 800;
+  font-size: 14px;
+  text-transform: lowercase;
+  letter-spacing: 0.01em;
+}
+.dk-welcome-hint {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.65;
+  text-transform: lowercase;
+}
+.dk-welcome-arrow {
+  flex: 0 0 auto;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  opacity: 0.55;
+}
+
+.dk-welcome-rec-stamp {
+  position: absolute;
+  top: -10px;
+  right: 10px;
+  background: var(--alarm-red);
+  color: var(--white);
+  border: 2px solid var(--ink);
+  box-shadow: var(--shadow-sm);
+  padding: 2px 8px;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transform: rotate(4deg);
+  pointer-events: none;
+}
+
+.dk-welcome-foot {
+  margin: 10px 0 0;
+  padding: 10px 14px;
+  border: 2px dashed var(--ink);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+  opacity: 0.78;
+  text-align: center;
+  line-height: 1.4;
+}
+.dk-welcome-foot span[aria-hidden] { margin-right: 6px; }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   "BACK IT UP" — seed phrase backup screen (Create flow step 1).
+   Big inline page header with back chip, red banner, tap-to-reveal seed
+   black box, then 12-word grid (yellow + white alternating cells), and
+   COPY / I-WROTE-IT-DOWN action row. Mirrors the DogeKit neobrutalist
+   aesthetic (3px ink, 4px shadow, lowercase mono words, rotated stamps).
+   ─────────────────────────────────────────────────────────────────────── */
+/* Page caption — single hand-written line that sits inside the Header
+   bounding box (passed via `caption` prop on the Header component) on
+   secondary screens (BACK IT UP, Settings, Receive). Comic-style font +
+   ink color at 75% opacity is the "doge meme" voice in lowercase. Locked
+   to height: 12px / line-height: 12px so the row never grows past one
+   line — long captions truncate via overflow rather than reflow the
+   layout below. Lives inside .dk-header so the cream bg + sticky context
+   are shared and there's no gap between the title row and the caption. */
+.dk-header .dk-page-caption {
+  color: rgb(0, 0, 0);
+  display: block;
+  font-family: "Comic Neue", "Comic Sans MS", "Chalkboard SE", cursive;
+  font-size: 12px;
+  font-weight: 700;
+  height: 12px;
+  letter-spacing: normal;
+  line-height: 12px;
+  margin-top: 2px;
+  margin-bottom: 0;
+  opacity: 0.75;
+  text-rendering: optimizeLegibility;
+  text-transform: none;
+}
+
+/* Red warning banner — emoji left, stacked text right. Headline (page id +
+   meme caption) sits above the warning body in uppercase + tighter
+   letter-spacing so it reads as a "page header" plus warning — the
+   subtitle is anchored inside the same card as the standard Header
+   rather than floating between header and page content. */
+.dk-warn-banner {
+  background: var(--alarm-red);
+  color: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow);
+  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 14px;
+}
+.dk-warn-emoji { font-size: 22px; line-height: 1; flex-shrink: 0; }
+.dk-warn-text {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  opacity: 0.95;
+}
+
+/* Black tap-to-reveal box. Inner dashed white border + centered emoji + CTA.
+   Click anywhere → setRevealed(true) swaps it out for the grid. */
+.dk-seed-veil {
+  width: 100%;
+  background: var(--ink);
+  border: var(--border-rule);
+  box-shadow: var(--shadow);
+  padding: 0;
+  margin: 0 0 14px;
+  cursor: pointer;
+  min-height: 220px;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  font-family: var(--font-display);
+}
+.dk-seed-veil:hover  { transform: translate(2px, 2px); box-shadow: var(--shadow-sm); }
+.dk-seed-veil:active { transform: translate(4px, 4px); box-shadow: none; }
+.dk-seed-veil-inner {
+  flex: 1;
+  margin: 12px;
+  border: 2px dashed rgba(255, 255, 255, 0.55);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+}
+.dk-seed-emoji { font-size: 30px; line-height: 1; }
+.dk-seed-veil-cta {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--white);
+  text-transform: uppercase;
+}
+
+/* 12-word grid — 6 rows x 2 cols, alternating yellow / white cells per the
+   mockup (cells 1,3,5,8,10,12 yellow; 2,4,6,7,9,11 white per checkerboard). */
+.dk-seed-grid {
+  background: var(--ink);
+  border: var(--border-rule);
+  box-shadow: var(--shadow);
+  padding: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 0 0 14px;
+}
+.dk-seed-cell {
+  background: var(--doge-yellow);
+  border: 2px solid var(--ink);
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink);
+  min-width: 0;
+}
+/* Brand-specified white-cell positions: 2, 4, 6, 9, 10. Rest stay yellow.
+   Pattern is intentionally irregular per design — gives the grid a doge-meme
+   "scattered" feel rather than a clean checkerboard. */
+.dk-seed-cell:nth-child(2),
+.dk-seed-cell:nth-child(4),
+.dk-seed-cell:nth-child(6),
+.dk-seed-cell:nth-child(9),
+.dk-seed-cell:nth-child(10) { background: var(--white); }
+.dk-seed-num {
+  flex: 0 0 22px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink);
+  opacity: 0.55;
+  text-align: center;
+  border-right: 1px dashed rgba(0, 0, 0, 0.3);
+  padding-right: 6px;
+}
+.dk-seed-word {
+  flex: 1;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dk-seed-actions {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+}
+.dk-seed-actions .dk-btn { padding: 12px 18px; font-size: 13px; }
+
+/* (dk-pref-group removed — currency / auto-lock / network now sit as
+   three top-level dk-set-card siblings without a wrapping container.) */
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Import-seed screen — DogeKit per-cell phrase entry.
+   Layout: tabs (12/24) → black-card grid of numbered word inputs → yellow
+   progress CTA "0/12 WORDS" → dashed clear-all action. Mirrors BACK IT UP
+   visual language but inputs are editable instead of read-only.
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* Pixel-replica of wallet/image.png (380×615 mockup). Values measured per
+   element off the source image; keep them integer + locked-down with
+   `min-height` (and exact paddings) so any future content change can't
+   silently drift the layout. Popup root is 380px wide with 14px L/R body
+   padding → 352px content width across all block-level rows.
+     12/24 tabs           48px tall · 1:1 grid · 12px gap
+     black grid card      12px padding · 8px row gap · 10px col gap
+     each input cell      40px tall  · 30px num column · 2px ink rule
+     CTA "0/12 WORDS"     50px tall  · 15px Anton uppercase
+     clear-all            38px tall  · dashed ink border · no shadow
+*/
+
+.dk-seed-size-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0 0 12px;
+}
+.dk-seed-size-tab {
+  background: var(--white);
+  border: var(--border-rule);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 0 8px;
+  cursor: pointer;
+  text-transform: lowercase;
+  color: var(--ink);
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 80ms ease;
+}
+.dk-seed-size-tab.is-active { background: var(--doge-yellow); }
+.dk-seed-size-tab:hover     { transform: translate(2px, 2px); box-shadow: none; }
+
+.dk-seed-input-grid {
+  background: var(--ink);
+  border: var(--border-rule);
+  box-shadow: var(--shadow);
+  padding: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin: 0 0 14px;
+}
+
+.dk-seed-input-cell {
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  cursor: text;
+  min-width: 0;
+  height: 31px;
+}
+.dk-seed-input-num {
+  flex: 0 0 24px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink);
+  opacity: 0.55;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cream);
+  user-select: none;
+  pointer-events: none;
+}
+.dk-seed-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  padding: 0 8px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.01em;
+  height: 100%;
+}
+.dk-seed-input:focus { background: rgba(0, 0, 0, 0.06); }
+
+.dk-seed-cta {
+  margin: 0 0 10px;
+  width: 100%;
+  height: 50px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dk-seed-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 38px;
+  background: transparent;
+  border: 2px dashed var(--ink);
+  padding: 0 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  opacity: 0.78;
+}
+.dk-seed-clear:hover { opacity: 1; background: rgba(0, 0, 0, 0.04); }
