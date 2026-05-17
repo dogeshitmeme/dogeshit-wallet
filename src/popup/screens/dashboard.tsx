@@ -378,15 +378,27 @@ const MAINNET_CHAIN_ID = 1;
  *  working gateway with zero JS-side polling/probing. When `src`
  *  isn't an IPFS path (data: URLs, https://example.com/...), short-
  *  circuit to a single img — no race needed. */
-function NftImage({ src, alt = '' }: { src: string; alt?: string }) {
-  const tail = ipfsTailFromUrl(src);
+function NftImage({ srcs, alt = '' }: { srcs: string[]; alt?: string }) {
   const [winner, setWinner] = useState<string | null>(null);
 
-  if (!tail) {
-    return <img src={src} alt={alt} loading="lazy" />;
-  }
+  // Expand every input src into its full candidate set:
+  //   - if `src` contains an IPFS CID tail, expand to [src, ...public-gateway mirrors]
+  //   - otherwise (plain https / data: / arweave.net), just [src]
+  // Dedup the union so we don't double-probe when two metadata fields
+  // collapse to the same URL (common when `image` and `image_url` mirror).
+  const candidates = (() => {
+    const all: string[] = [];
+    for (const src of srcs) {
+      all.push(src);
+      const tail = ipfsTailFromUrl(src);
+      if (tail) for (const gw of IPFS_GATEWAYS) all.push(gw + tail);
+    }
+    return Array.from(new Set(all));
+  })();
 
-  const candidates = IPFS_GATEWAYS.map((gw) => gw + tail);
+  if (candidates.length === 0) {
+    return <span className="placeholder" aria-hidden>🖼</span>;
+  }
 
   return (
     <>
@@ -1181,8 +1193,8 @@ export function Dashboard({
                 }}
               >
                 <div className="thumb">
-                  {n.image ? (
-                    <NftImage src={n.image} />
+                  {n.imageCandidates.length > 0 ? (
+                    <NftImage srcs={n.imageCandidates} />
                   ) : (
                     <span className="placeholder" aria-hidden>🖼</span>
                   )}
@@ -1425,8 +1437,8 @@ function NftDetailModal({
       <div className="dk-modal" onClick={(e) => e.stopPropagation()}>
         {!busy && <button className="dk-modal-close" onClick={onClose} aria-label="close">✕</button>}
         <div className="dk-modal-thumb">
-          {nft.image
-            ? <NftImage src={nft.image} />
+          {nft.imageCandidates.length > 0
+            ? <NftImage srcs={nft.imageCandidates} />
             : <span className="placeholder" aria-hidden>🖼</span>}
         </div>
         <h3 className="dk-modal-title" title={nft.name}>{nft.name}</h3>

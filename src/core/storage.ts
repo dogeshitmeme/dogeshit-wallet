@@ -336,9 +336,13 @@ export type NftRecord = {
   /** Display name. Best-effort: from metadata.name; falls back to a
    *  derived "<symbol> #<tokenId>" if metadata fetch failed. */
   name: string;
-  /** Resolved image URL (post-IPFS-gateway substitution). null if the
-   *  metadata didn't include an image or the JSON itself was unreachable. */
-  image: string | null;
+  /** Resolved image URLs from every image-shaped metadata field
+   *  (`image`, `image_url`, `animation_url`, `image_alt`), each already
+   *  passed through resolveTokenUri. Empty array when no recognised
+   *  image field was present or the metadata JSON was unreachable. The
+   *  renderer races all entries plus IPFS-gateway mirrors so whichever
+   *  URL the user's network resolves fastest wins. */
+  imageCandidates: string[];
   /** Optional description from metadata.description. */
   description: string | null;
   /** Owned-count as decimal string. ERC-721 is always "1" by definition;
@@ -364,8 +368,24 @@ async function getAllNfts(): Promise<NftsByChain> {
 export async function listNfts(chainId: number): Promise<NftRecord[]> {
   const all = await getAllNfts();
   return Object.values(all[chainId] ?? {})
+    .map(normalizeNftRecord)
     // Newest first.
     .sort((a, b) => b.addedAt - a.addedAt);
+}
+
+/** Records persisted before v0.6.1 hold `image: string | null` instead of
+ *  `imageCandidates: string[]`. Promote the legacy field at read-time so
+ *  consumers always see the new shape. Records are upgraded in-place on
+ *  the next write (addNftRecord overwrites with the new shape). */
+function normalizeNftRecord(raw: NftRecord): NftRecord {
+  const r = raw as NftRecord & { image?: string | null };
+  if (Array.isArray(r.imageCandidates)) {
+    const { image: _legacy, ...rest } = r;
+    return rest as NftRecord;
+  }
+  const legacy = typeof r.image === 'string' && r.image ? [r.image] : [];
+  const { image: _drop, ...rest } = r;
+  return { ...rest, imageCandidates: legacy } as NftRecord;
 }
 
 export async function addNftRecord(chainId: number, nft: NftRecord): Promise<void> {

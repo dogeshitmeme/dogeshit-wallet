@@ -51,7 +51,7 @@ type ExtensionFixtures = {
   popup: Page;
   /** Fresh-install popup — no vault, no accounts, no settings. Lands on
    *  the Welcome screen. Skips snapshot injection. Used by
-   *  `onboarding.spec.ts` and the first-unlock cases. */
+   *  `onboarding.e2e.ts` and the first-unlock cases. */
   pristinePopup: Page;
   /** Lazy: only starts when a test requests it. Anvil 1.5.1 in PATH
    *  (foundry). Random port to avoid collisions across parallel runs. */

@@ -1709,7 +1709,7 @@ async function materializeNftRecord(
     tokenId: tokenId.toString(),
     standard,
     name: meta.name,
-    image: meta.image,
+    imageCandidates: meta.imageCandidates,
     description: meta.description,
     // ERC-721 always reads as 1n. ERC-1155 reads owner's balanceOf;
     // null = RPC failure, UI omits the badge rather than showing "× 0".

@@ -66,9 +66,13 @@ export type NftMeta = {
   /** Display name from metadata.name — falls back to "<symbol> #<tokenId>"
    *  if the metadata JSON is unreachable. */
   name: string;
-  /** Resolved image URL (IPFS gateways already substituted). null if the
-   *  metadata had no image or the JSON itself failed to load. */
-  image: string | null;
+  /** Resolved image URLs collected from every image-shaped field on the
+   *  metadata JSON, in priority order: `image`, `image_url`, `animation_url`,
+   *  `image_alt`. Each entry is already passed through `resolveTokenUri`.
+   *  Empty array if the metadata had no recognised image field or the JSON
+   *  itself failed to load. The renderer races all entries in parallel so
+   *  whichever URL resolves fastest wins. */
+  imageCandidates: string[];
   /** Optional description from metadata.description. */
   description: string | null;
 };
@@ -123,6 +127,7 @@ export const IPFS_GATEWAYS = [
   'https://dweb.link/ipfs/',
   'https://gateway.pinata.cloud/ipfs/',
   'https://ipfs.io/ipfs/',
+  'https://gateway.lighthouse.storage/ipfs/',
 ] as const;
 
 /** Match the `/ipfs/<CID>[/path]` tail of any public-gateway URL.
@@ -161,7 +166,8 @@ export function resolveTokenUri(uri: string): string {
         || host === 'gateway.pinata.cloud'
         || host === 'w3s.link'
         || host === 'nftstorage.link'
-        || host === '4everland.io';
+        || host === '4everland.io'
+        || host === 'gateway.lighthouse.storage';
       const m = u.match(IPFS_PATH_RE);
       if (isKnownGateway && m) return IPFS_GATEWAYS[0] + m[1];
     } catch { /* malformed URL, fall through */ }
@@ -225,7 +231,12 @@ function substituteErc1155Id(uri: string, tokenId: bigint): string {
  *  gateway can't stall the whole add-NFT flow. Other https URLs
  *  fetch once with a 10 s ceiling. */
 async function fetchMetadataJson(url: string): Promise<{
-  name?: string; description?: string; image?: string;
+  name?: string;
+  description?: string;
+  image?: string;
+  image_url?: string;
+  animation_url?: string;
+  image_alt?: string;
 } | null> {
   if (url.startsWith('data:')) {
     const comma = url.indexOf(',');
@@ -307,19 +318,57 @@ export async function fetchNftMeta(
       rawUri = substituteErc1155Id(u, tokenId);
     }
   } catch {
-    return { standard, name: fallbackName, image: null, description: null };
+    return { standard, name: fallbackName, imageCandidates: [], description: null };
   }
 
   const metaJson = await fetchMetadataJson(resolveTokenUri(rawUri));
   if (!metaJson) {
-    return { standard, name: fallbackName, image: null, description: null };
+    return { standard, name: fallbackName, imageCandidates: [], description: null };
   }
   return {
     standard,
     name: typeof metaJson.name === 'string' ? metaJson.name : fallbackName,
-    image: typeof metaJson.image === 'string' ? resolveTokenUri(metaJson.image) : null,
+    imageCandidates: collectImageCandidates(metaJson),
     description: typeof metaJson.description === 'string' ? metaJson.description : null,
   };
+}
+
+/** Pull every image-shaped field off a metadata JSON object, resolve each
+ *  through `resolveTokenUri`, and dedup. Priority order (highest first):
+ *
+ *    - `image`         — EIP-721 / EIP-1155 standard field, always tried first.
+ *    - `image_url`     — OpenSea metadata convention, frequently an HTTPS
+ *                        CDN mirror of the canonical `image` IPFS URI.
+ *    - `animation_url` — OpenSea convention for video/GIF/HTML; some
+ *                        collections use it as an image fallback for
+ *                        static thumbnails.
+ *    - `image_alt`     — non-standard, but seen in the wild as the
+ *                        minter's explicit "if the main image dies, use
+ *                        this" hint.
+ *
+ *  The renderer races all candidates in parallel, so this list is just
+ *  the "what to consider"; the actual winner is whichever URL the user's
+ *  network resolves fastest. We never pick by spec priority alone. */
+export function collectImageCandidates(meta: {
+  image?: unknown;
+  image_url?: unknown;
+  animation_url?: unknown;
+  image_alt?: unknown;
+}): string[] {
+  const fields = ['image', 'image_url', 'animation_url', 'image_alt'] as const;
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const k of fields) {
+    const v = meta[k];
+    if (typeof v !== 'string') continue;
+    const trimmed = v.trim();
+    if (!trimmed) continue;
+    const resolved = resolveTokenUri(trimmed);
+    if (seen.has(resolved)) continue;
+    seen.add(resolved);
+    out.push(resolved);
+  }
+  return out;
 }
 
 /** Verify the user owns this NFT before adding it to their list. Skipping

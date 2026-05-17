@@ -395,3 +395,54 @@ describe('dev flags', () => {
     expect(await storage.getDevFlags()).toEqual({});
   });
 });
+
+describe('NFT record legacy → imageCandidates migration', () => {
+  // Records persisted before v0.6.1 hold `image: string | null`; the new
+  // shape is `imageCandidates: string[]`. listNfts must promote legacy
+  // records at read-time so the renderer never sees the old field.
+  test('legacy `image` string is promoted to `imageCandidates: [image]`', async () => {
+    const { chromeStorageStub } = await import('./_setup/chrome-stub');
+    chromeStorageStub.store.nfts = {
+      11155111: {
+        '0xabc::1': {
+          address: '0xabc', tokenId: '1', standard: 'ERC721',
+          name: 'Legacy', image: 'https://cdn.example.com/0.png',
+          description: null, addedAt: 1,
+        },
+      },
+    };
+    const list = await storage.listNfts(11155111);
+    expect(list).toHaveLength(1);
+    expect(list[0]!.imageCandidates).toEqual(['https://cdn.example.com/0.png']);
+    expect(list[0]).not.toHaveProperty('image');
+  });
+  test('legacy `image: null` is promoted to `imageCandidates: []`', async () => {
+    const { chromeStorageStub } = await import('./_setup/chrome-stub');
+    chromeStorageStub.store.nfts = {
+      1: {
+        '0xdef::2': {
+          address: '0xdef', tokenId: '2', standard: 'ERC1155',
+          name: 'No image', image: null,
+          description: null, addedAt: 1,
+        },
+      },
+    };
+    const list = await storage.listNfts(1);
+    expect(list[0]!.imageCandidates).toEqual([]);
+    expect(list[0]).not.toHaveProperty('image');
+  });
+  test('records already on the new shape pass through unchanged', async () => {
+    const { chromeStorageStub } = await import('./_setup/chrome-stub');
+    chromeStorageStub.store.nfts = {
+      1: {
+        '0xfeed::3': {
+          address: '0xfeed', tokenId: '3', standard: 'ERC721',
+          name: 'New', imageCandidates: ['ipfs://X', 'https://cdn.example.com/0.png'],
+          description: null, addedAt: 1,
+        },
+      },
+    };
+    const list = await storage.listNfts(1);
+    expect(list[0]!.imageCandidates).toEqual(['ipfs://X', 'https://cdn.example.com/0.png']);
+  });
+});
