@@ -1,6 +1,6 @@
 {
   "name": "dogeshit-wallet",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "private": true,
   "description": "General-purpose EIP-7702 Chrome extension wallet (MV3) — exposes wallet_signAuthorization and eth_sendTransaction({authorizationList}) with no delegate whitelist.",
   "license": "MIT",
