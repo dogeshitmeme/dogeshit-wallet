@@ -37,7 +37,7 @@
 wallet/
 ├── manifest.json              MV3 manifest (storage + alarms; <all_urls>)
 ├── package.json               viem 2.x + react 19 + qrcode + bun bundler
-├── tests/                     435 bun:test units across 22 files (no anvil deps)
+├── tests/                     446 bun:test units across 22 files (no anvil deps)
 │   ├── _setup/chrome-stub.ts  in-memory chrome.storage.{local,session} stub
 │   ├── crypto.test.ts         vault round-trip + BIP-44 vectors + sig recover
 │   ├── validators.test.ts     EIP-712 malformed cases + EIP712Domain canonical
@@ -119,7 +119,7 @@ match `manifest.json`'s references one-to-one.
 ## Tests
 
 ```sh
-bun test tests/                # ~8 s, 435 tests across 22 files
+bun test tests/                # ~8 s, 446 tests across 22 files
 bun test tests/risk.test.ts    # one file
 ```
 
