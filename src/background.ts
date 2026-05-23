@@ -1133,31 +1133,6 @@ async function sign(req: PendingRequest, mnemonic: string): Promise<unknown> {
         );
       }
 
-      // EIP-7702 auth.nonce MUST equal the authorizer EOA's CURRENT
-      // pending nonce. A mismatched value mines but the on-chain
-      // ecrecover yields a junk authority, the auth silently fails,
-      // user sees "tx mined, no code change" with no clear cause.
-      // We refuse loudly here so the dapp dev gets a useful error.
-      try {
-        const authorityAddr = addressFromMnemonic(mnemonic, idx);
-        const onChainNonce = await cachedPublicClient(network).getTransactionCount({
-          address: authorityAddr,
-          blockTag: 'pending',
-        });
-        if (BigInt(onChainNonce) !== reqNonceBig) {
-          throw new Error(
-            `wallet_signAuthorization: nonce mismatch — request asks for ` +
-            `${reqNonce}, but EOA pending nonce is ${onChainNonce}. Auth would silently ` +
-            `fail on chain. Have the dapp re-issue with nonce ${onChainNonce}.`,
-          );
-        }
-      } catch (e) {
-        // Re-throw nonce-mismatch errors; swallow RPC failures (the
-        // user's RPC may be down — we'd rather still try the sign
-        // than refuse over a transient network blip).
-        if (e instanceof Error && e.message.includes('nonce mismatch')) throw e;
-      }
-
       // User saw the delegate target with a red banner and an explicit
       // confirmation. We don't refuse arbitrary delegates — only structural
       // safety violations get blocked here.
