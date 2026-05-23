@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Dogeshit Wallet",
   "short_name": "Dogeshit",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Self-custody EVM wallet with EIP-7702 support. Multi-chain, multi-account, encrypted local vault. Experimental — not audited.",
   "homepage_url": "https://wallet.dogeshit.meme",
   "author": "Dogeshit",
